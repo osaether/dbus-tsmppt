@@ -8,8 +8,7 @@ QMAKE_CXXFLAGS += -Wno-psabi
 # solved in newer QT versions.
 QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 
-#LIBS += -L/usr/local/lib -lmodbus
-LIBS += -L/home/ole/repos/git/libmodbus/src/.libs -lmodbus
+LIBS += -L/usr/local/lib -lmodbus
 QT += core network dbus
 QT -= gui
 
