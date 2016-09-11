@@ -6,7 +6,7 @@ This application reads essential charging data from a remote Tristar MPPT 60 con
 Building
 ========
 
-In order to build the application for the CCGX you need a linux system, a recent version of the QT libraries and the CCGX SDK. You can find the CCGX SDK here:
+In order to build the application for the CCGX you need a linux system, a recent version of the QT libraries and the CCGX SDK. You can find instructions on installing the CCGX SDK here:
 
 https://www.victronenergy.com/live/open_source:ccgx:setup_development_environment
 
