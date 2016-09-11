@@ -14,25 +14,25 @@ You will also need libmodbus v3.1.2 or higher (http://libmodbus.org/).
 
 Edit the path to libmodbus in software/dbus-tsmppt.pro, then
 
-cd software
-qmake
-make
+    cd software
+    qmake
+    make
 
 Running the application on CCGX
 ===============================
 
 The application expect the IP-address/hostname and the Modbus IP-port number stored in the CCGX settings. You can either edit the /data/conf/settings.xml file manually (not recommended) or use the CCGX settings menu. To use the settings menu copy the file PageSettingsTsmppt.qml in the qml folder to the folder on CCGX where the qml files are stored (usually /opt/color-control/gui/qml). Then add a link to PageSettingsTsmppt.qml in the main settings qml-file, PageSettings.qml found in the same folder:
 
-MbSubMenu {
-    description: qsTr("TriStar MPPT 60 Solar Charger")
-    subpage: Component { PageSettingsTsmppt {} }
-}
+    MbSubMenu {
+        description: qsTr("TriStar MPPT 60 Solar Charger")
+        subpage: Component { PageSettingsTsmppt {} }
+    }
 
 To display the data in the CCGX gui you also need to add these lines to the isModelSupported function in PageSolarCharger.qml:
 
-/* Morningstar TriStar MPPT 60 */
-if (productId.value === 0xABCD)
-    return true
+    /* Morningstar TriStar MPPT 60 */
+    if (productId.value === 0xABCD)
+        return true
 
 Testing on Linux
 ================
