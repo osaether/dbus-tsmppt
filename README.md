@@ -12,7 +12,7 @@ https://www.victronenergy.com/live/open_source:ccgx:setup_development_environmen
 
 You will also need libmodbus v3.1.2 or higher (http://libmodbus.org/).
 
-Clone repo with 'git clone --recursive https://github.com/osaether/dbus-tsmppt.git'
+Clone repo with `git clone --recursive https://github.com/osaether/dbus-tsmppt.git`
 
 Edit the path to libmodbus in software/dbus-tsmppt.pro, then
 
