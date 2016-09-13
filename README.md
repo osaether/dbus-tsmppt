@@ -1,7 +1,7 @@
 dbus-tsmppt
 ===========
 
-This application reads essential charging data from a remote Tristar MPPT 60 controller and publish it on the D-Bus. It is designed to run on the Victron Color Control (CCGX) but can easily be modified to run on other systems.
+This application reads essential charging data from a Morningstar Tristar MPPT 60 charge controller and publish it on the D-Bus. It is designed to run on the Victron Color Control (CCGX) but can easily be modified to run on other systems.
 
 Building
 ========
