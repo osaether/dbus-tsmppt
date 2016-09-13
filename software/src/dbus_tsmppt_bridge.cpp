@@ -26,11 +26,22 @@ DBusTsmpptBridge::DBusTsmpptBridge(Tsmppt *tsmppt, QObject *parent):
 
     produce(mTsmppt, "arrayCurrent", "/Pv/I", "A", 2);
     produce(mTsmppt, "arrayVoltage", "/Pv/V", "V", 2);
-    produce(mTsmppt, "outputPower", "/Yield/Power", "W", 2);
+    produce(mTsmppt, "outputPower", "/Yield/Power", "W", 0);
     produce(mTsmppt, "chargingCurrent", "/Dc/0/Current", "A", 2);
     produce(mTsmppt, "batteryVoltage", "/Dc/0/Voltage", "V", 2); 
     produce(mTsmppt, "batteryTemperature", "/Dc/0/Temperature");
     produce(mTsmppt, "chargeState", "/State");
+
+    produce("/History/Overall/DaysAvailable", 1);
+    produce(mTsmppt, "batteryVoltageMaxDaily", "/History/Daily/0/MaxBatteryVoltage", "V", 2);
+    produce(mTsmppt, "batteryVoltageMinDaily", "/History/Daily/0/MinBatteryVoltage", "V", 2);
+    produce(mTsmppt, "powerMaxDaily", "/History/Daily/0/MaxPower", "W", 0);
+    produce(mTsmppt, "arrayVoltageMaxDaily", "/History/Daily/0/MaxPvVoltage", "V", 2);
+    produce(mTsmppt, "wattHoursDaily", "/History/Daily/0/Yield", "kWh", 2);
+    produce(mTsmppt, "timeInAbsorption", "/History/Daily/0/TimeInAbsorption");
+    // TSMPPT does not give time in bulk:
+    // produce(mTsmppt, "timeInBulk", "/History/Daily/0/TimeInBulk");
+    produce(mTsmppt, "timeInFloat", "/History/Daily/0/TimeInFloat");
 
     //registerService();
 }
