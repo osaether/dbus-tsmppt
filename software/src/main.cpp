@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <velib/qt/v_busitem.h>
 #include <velib/qt/v_busitems.h>
+#include <modbus-version.h>
 #include "dbus_tsmppt.h"
 
 void initLogger(QsLogging::Level logLevel)
@@ -16,6 +17,7 @@ void initLogger(QsLogging::Level logLevel)
 
     QLOG_INFO() << "dbus-tsmppt" << "v"VERSION << "started";
     QLOG_INFO() << "Built with Qt" << QT_VERSION_STR << "running on" << qVersion();
+    QLOG_INFO() << "Built with libmodbus" << LIBMODBUS_VERSION_STRING;
     QLOG_INFO() << "Built on" << __DATE__ << "at" << __TIME__;
     logger.setLoggingLevel(logLevel);
 }
