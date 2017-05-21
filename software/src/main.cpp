@@ -29,7 +29,7 @@ void initDBus(const QString &dbusAddress)
 
     QLOG_INFO() << "Wait for local settings on DBus(" << dbusAddress << ")...";
     VBusItem settings;
-    settings.consume("com.victronenergy.settings", "/Settings/TristarMPPT/IPAddress");
+    settings.consume("com.victronenergy.settings", "/Settings");
     for (;;) {
         QVariant reply = settings.getValue();
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
@@ -40,6 +40,7 @@ void initDBus(const QString &dbusAddress)
     }
     QLOG_INFO() << "Local settings found";
 }
+
 
 bool addSetting(const QString &path,
                 const QVariant &defaultValue,
@@ -137,10 +138,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    //addSetting("/Settings/TristarMPPT/IPAddress", "", 0, 0);
-    //addSetting("/Settings/TristarMPPT/PortNumber", 502, 0, 0);
     initDBus(dbusAddress);
-
+    addSetting("/Settings/TristarMPPT/IPAddress", "", "", "");
+    addSetting("/Settings/TristarMPPT/PortNumber", 502, 0, 0);
     DBusTsmppt a(0);
 
     app.connect(&a, SIGNAL(terminateApp()), &app, SLOT(quit()));

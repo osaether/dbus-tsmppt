@@ -24,6 +24,7 @@ const int REG_T_ABS         = 77;
 const int REG_LAST_DYN      = 79;
 const int REG_EHW_VERSION   = 57549;
 const int REG_ESERIAL       = 57536;
+const int REG_EMODEL        = 57548;
 
 static struct _TsmpptDynVals
 {
@@ -50,6 +51,7 @@ static struct _TsmpptStatVals
     QString     m_fw_ver;
     QString     m_hw_ver;
     uint64_t    m_serial;
+    uint16_t    m_model;
 } TsmpptStatVals;
 
 Tsmppt::Tsmppt(const QString &IPAddress, const int port, int slave, QObject *parent):
@@ -60,8 +62,17 @@ QObject(parent), mInitialized(false), mTimer(new QTimer(this))
     Q_ASSERT(mCtx != NULL);
     // modbus_set_debug(mCtx, true);
     modbus_set_error_recovery(mCtx, MODBUS_ERROR_RECOVERY_LINK);
+#if LIBMODBUS_VERSION_CHECK(3, 1, 1)
     modbus_set_response_timeout(mCtx, 20, 0);
     modbus_set_byte_timeout(mCtx, 10, 0);
+#else
+    struct timeval to;
+    to.tv_sec = 20;
+    to.tv_usec = 0;
+    modbus_set_response_timeout(mCtx, &to);
+    to.tv_sec = 10;
+    modbus_set_byte_timeout(mCtx, &to);
+#endif
     modbus_set_slave(mCtx, slave);
     mTimer->setInterval(2000);
     mTimer->start();
@@ -133,6 +144,10 @@ bool Tsmppt::initialize()
     readInputRegisters(REG_EHW_VERSION, 1, regs);
     TsmpptStatVals.m_hw_ver = QString::number(regs[0] >> 8) + "." + QString::number(regs[0] & 0xff);
 
+    // Read model
+    readInputRegisters(REG_EMODEL, 1, regs);
+    TsmpptStatVals.m_model = regs[0];
+
     // Read serial number:
     readInputRegisters(REG_ESERIAL, 4, regs);
     TsmpptStatVals.m_serial = (uint64_t)((regs[0] & 0xff) - 0x30) * 10000000;
@@ -186,7 +201,7 @@ void Tsmppt::updateValues()
     temp = (double)reg[REG_V_PV-REG_FIRST_DYN]  * TsmpptDynVals.m_v_pu / 32768.0;
     setArrayVoltage(temp);
 
-   // Max PV array voltage:
+    // Max PV array voltage:
     temp = (double)reg[REG_V_PV_MAX-REG_FIRST_DYN]  * TsmpptDynVals.m_v_pu / 32768.0;
     setArrayVoltageMaxDaily(temp);
 
@@ -375,10 +390,10 @@ int Tsmppt::chargeState() const
     // TSMPPT:              BlueSolar: 
     // 0 START              0 OFF
     // 1 NIGHT_CHECK        0 OFF
-    // 2 DISCOCNNECT        0 OFF
+    // 2 DISCONNECT         0 OFF
     // 3 NIGHT              0 OFF
     // 4 FAULT              2 FAULT
-    // 5 BULK               3 BULK
+    // 5 MNPPT              3 BULK
     // 6 ABSORPTION         4 ABSORPTION
     // 7 FLOAT              5 FLOAT
     // 8 EQUALIZE           7 EQUALIZE
@@ -423,17 +438,21 @@ void Tsmppt::setTimeInFloat(int v)
 
 QString Tsmppt::productName() const
 {
-    return QString("TriStar MPPT 60");
+    if (TsmpptStatVals.m_model == 1)
+        return QString("TriStar MPPT 60");
+    else
+        return QString("TriStar MPPT 45");
 }
 
 void Tsmppt::onTimeout()
 {
     if (!mInitialized)
     {
-    mTimer->stop();
+        mTimer->stop();
         initialize();
         mTimer->start();
         return;
     }
     updateValues();
 }
+
