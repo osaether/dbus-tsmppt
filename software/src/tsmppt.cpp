@@ -12,6 +12,7 @@ const int REG_V_PV          = 27;
 const int REG_I_PV          = 29;
 const int REG_I_CC          = 28;
 const int REG_T_BAT         = 37;
+const int REG_I_CC_1M       = 39;
 const int REG_CHARGE_STATE  = 50;
 const int REG_POUT          = 58;
 const int REG_V_BAT_MIN     = 64;
@@ -190,7 +191,7 @@ void Tsmppt::updateValues()
     setBatteryTemperature(temp);
 
     // Charge current:
-    temp = (double)reg[REG_I_CC-REG_FIRST_DYN] * TsmpptDynVals.m_i_pu / 32768.0;
+    temp = (double)reg[REG_I_CC_1M-REG_FIRST_DYN] * TsmpptDynVals.m_i_pu / 32768.0;
     setChargingCurrent(temp);
     
     // MPPT output power:
@@ -438,10 +439,22 @@ void Tsmppt::setTimeInFloat(int v)
 
 QString Tsmppt::productName() const
 {
-    if (TsmpptStatVals.m_model == 1)
-        return QString("TriStar MPPT 60");
-    else
-        return QString("TriStar MPPT 45");
+    QString name;
+    switch (TsmpptStatVals.m_model)
+    {
+        case 0:
+            name = "TriStar MPPT 45";
+            break;
+
+        case 1:
+            name = "TriStar MPPT 60";
+            break;
+
+        case 2:
+            name = "TriStar MPPT 30";
+            break;
+    }
+    return name;
 }
 
 void Tsmppt::onTimeout()
