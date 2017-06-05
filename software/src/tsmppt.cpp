@@ -14,6 +14,8 @@ const int REG_I_CC          = 28;
 const int REG_T_BAT         = 37;
 const int REG_I_CC_1M       = 39;
 const int REG_CHARGE_STATE  = 50;
+const int REG_KWH_TOTAL_RES = 56;
+const int REG_KWH_TOTAL     = 57;
 const int REG_POUT          = 58;
 const int REG_V_BAT_MIN     = 64;
 const int REG_V_BAT_MAX     = 65;
@@ -29,22 +31,24 @@ const int REG_EMODEL        = 57548;
 
 static struct _TsmpptDynVals
 {
-    double m_v_pu;      // Voltage scaling
-    double m_i_pu;      // Current scaling
-    double m_v_bat;     // Battery voltage
-    double m_v_bat_max; // Max battery voltage, daily
-    double m_v_bat_min; // Min battery voltage, daily
-    double m_t_bat;     // Battery temperature
-    double m_i_cc;      // Charging current
-    double m_v_pv;      // PV array voltage 
-    double m_pout;      // Output power
-    double m_i_pv;      // PV array current
-    double m_p_max;     // Max power, daily
-    double m_whc;       // Watt hours, daily
-    double m_v_pv_max;  // Max PV voltage, daily
-    int m_cs;           // Charge state
-    int m_t_abs;        // Time in absorption
-    int m_t_float;      // Time in float
+    double m_v_pu;          // Voltage scaling
+    double m_i_pu;          // Current scaling
+    double m_v_bat;         // Battery voltage
+    double m_v_bat_max;     // Max battery voltage, daily
+    double m_v_bat_min;     // Min battery voltage, daily
+    double m_t_bat;         // Battery temperature
+    double m_i_cc;          // Charging current
+    double m_v_pv;          // PV array voltage 
+    double m_pout;          // Output power
+    double m_i_pv;          // PV array current
+    double m_p_max;         // Max power, daily
+    double m_whc;           // Watt hours, daily
+    double m_whc_tot;       // Watt hours, total
+    double m_whc_tot_res;   // Watt hours, total resettable
+    double m_v_pv_max;      // Max PV voltage, daily
+    int m_cs;               // Charge state
+    int m_t_abs;            // Time in absorption
+    int m_t_float;          // Time in float
 } TsmpptDynVals;
 
 static struct _TsmpptStatVals
@@ -216,6 +220,14 @@ void Tsmppt::updateValues()
     temp /= 1000.0;
     setWattHoursDaily(temp);
 
+    // Whc total:
+    temp = (double)reg[REG_KWH_TOTAL_RES-REG_FIRST_DYN];
+    setWattHoursTotalResettable(temp);
+
+    // Whc total:
+    temp = (double)reg[REG_KWH_TOTAL-REG_FIRST_DYN];
+    setWattHoursTotal(temp);
+
     // Pmax daily:
     temp = (double)reg[REG_POUT_MAX_DAILY-REG_FIRST_DYN] * TsmpptDynVals.m_i_pu * TsmpptDynVals.m_v_pu / 131072.0;
     setPowerMaxDaily(temp);
@@ -382,7 +394,33 @@ void Tsmppt::setWattHoursDaily(double v)
     if (TsmpptDynVals.m_whc == v)
         return;
     TsmpptDynVals.m_whc = v;
-    emit wattHoursDailyChanged();
+    emit wattHoursTotalChanged();
+}
+
+double Tsmppt::wattHoursTotal() const
+{
+    return TsmpptDynVals.m_whc_tot;
+}
+
+void Tsmppt::setWattHoursTotal(double v)
+{
+    if (TsmpptDynVals.m_whc_tot == v)
+        return;
+    TsmpptDynVals.m_whc_tot = v;
+    emit wattHoursTotalChanged();
+}
+
+double Tsmppt::wattHoursTotalResettable() const
+{
+    return TsmpptDynVals.m_whc_tot_res;
+}
+
+void Tsmppt::setWattHoursTotalResettable(double v)
+{
+    if (TsmpptDynVals.m_whc_tot_res == v)
+        return;
+    TsmpptDynVals.m_whc_tot_res = v;
+    emit wattHoursTotalResettableChanged();
 }
 
 int Tsmppt::chargeState() const

@@ -21,6 +21,8 @@ class Tsmppt : public QObject
     Q_PROPERTY(double arrayVoltageMaxDaily READ arrayVoltageMaxDaily WRITE setArrayVoltageMaxDaily NOTIFY arrayVoltageMaxDailyChanged)
     Q_PROPERTY(double powerMaxDaily READ powerMaxDaily WRITE setPowerMaxDaily NOTIFY powerMaxDailyChanged)
     Q_PROPERTY(double wattHoursDaily READ wattHoursDaily WRITE setWattHoursDaily NOTIFY wattHoursDailyChanged)
+    Q_PROPERTY(double wattHoursTotal READ wattHoursTotal WRITE setWattHoursTotal NOTIFY wattHoursTotalChanged)
+    Q_PROPERTY(double wattHoursTotalResettable READ wattHoursTotalResettable WRITE setWattHoursTotalResettable NOTIFY wattHoursTotalResettableChanged)
     Q_PROPERTY(int chargeState READ chargeState WRITE setChargeState NOTIFY chargeStateChanged)
     Q_PROPERTY(int timeInAbsorption READ timeInAbsorption WRITE setTimeInAbsorption NOTIFY timeInAbsorptionChanged)
     Q_PROPERTY(int timeInFloat READ timeInFloat WRITE setTimeInFloat NOTIFY timeInFloatChanged)
@@ -62,6 +64,12 @@ public:
     double wattHoursDaily() const;
     void setWattHoursDaily(double v);
 
+    double wattHoursTotal() const;
+    void setWattHoursTotal(double v);
+
+    double wattHoursTotalResettable() const;
+    void setWattHoursTotalResettable(double v);
+
     int chargeState() const;
     void setChargeState(int v);
 
@@ -90,6 +98,8 @@ signals:
     void arrayVoltageMaxDailyChanged();
     void powerMaxDailyChanged();
     void wattHoursDailyChanged();
+    void wattHoursTotalChanged();
+    void wattHoursTotalResettableChanged();
     void chargeStateChanged();
     void tsmpptConnected();
     void connectionLost();
