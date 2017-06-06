@@ -1,7 +1,7 @@
 dbus-tsmppt
 ===========
 
-This application reads essential charging data from a Morningstar Tristar MPPT 60 charge controller and publish it on the D-Bus. It is designed to run on the Victron Color Control (CCGX) but can easily be modified to run on other systems.
+This application reads essential charging data from a Morningstar Tristar MPPT charge controller and publish it on the D-Bus. It is designed to run on the Victron Color Control (CCGX) but can easily be modified to run on other systems.
 
 Building
 ========
@@ -30,9 +30,11 @@ The application expect the IP-address/hostname and the Modbus IP-port number sto
         subpage: Component { PageSettingsTsmppt {} }
     }
 
+Change "TriStar MPPT 60" to "TriStar MPPT 45" or "TriStar MPPT 30" according to the Tristar MPPT version you have.
+
 To display the data in the CCGX gui you also need to add these lines to the isModelSupported function in PageSolarCharger.qml:
 
-    /* Morningstar TriStar MPPT 60 */
+    /* Morningstar TriStar MPPT */
     if (productId.value === 0xABCD)
         return true
 
