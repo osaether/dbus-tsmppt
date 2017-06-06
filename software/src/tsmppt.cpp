@@ -195,7 +195,9 @@ void Tsmppt::updateValues()
     setBatteryTemperature(temp);
 
     // Charge current:
-    temp = (double)reg[REG_I_CC_1M-REG_FIRST_DYN] * TsmpptDynVals.m_i_pu / 32768.0;
+    temp = (double)(int16_t)reg[REG_I_CC_1M-REG_FIRST_DYN] * TsmpptDynVals.m_i_pu / 32768.0;
+    if (temp < 0.0)
+        temp = 0.0;
     setChargingCurrent(temp);
     
     // MPPT output power:
