@@ -29,36 +29,6 @@ const int REG_EHW_VERSION   = 57549;
 const int REG_ESERIAL       = 57536;
 const int REG_EMODEL        = 57548;
 
-static struct _TsmpptDynVals
-{
-    double m_v_pu;          // Voltage scaling
-    double m_i_pu;          // Current scaling
-    double m_v_bat;         // Battery voltage
-    double m_v_bat_max;     // Max battery voltage, daily
-    double m_v_bat_min;     // Min battery voltage, daily
-    double m_t_bat;         // Battery temperature
-    double m_i_cc;          // Charging current
-    double m_v_pv;          // PV array voltage 
-    double m_pout;          // Output power
-    double m_i_pv;          // PV array current
-    double m_p_max;         // Max power, daily
-    double m_whc;           // Watt hours, daily
-    double m_whc_tot;       // Watt hours, total
-    double m_whc_tot_res;   // Watt hours, total resettable
-    double m_v_pv_max;      // Max PV voltage, daily
-    int m_cs;               // Charge state
-    int m_t_abs;            // Time in absorption
-    int m_t_float;          // Time in float
-} TsmpptDynVals;
-
-static struct _TsmpptStatVals
-{
-    QString     m_fw_ver;
-    QString     m_hw_ver;
-    uint64_t    m_serial;
-    uint16_t    m_model;
-} TsmpptStatVals;
-
 Tsmppt::Tsmppt(const QString &IPAddress, const int port, int slave, QObject *parent):
 QObject(parent), mInitialized(false), mTimer(new QTimer(this))
 {
@@ -128,41 +98,41 @@ bool Tsmppt::initialize()
     readInputRegisters(REG_V_PU, 6, regs);
     
     // Voltage scaling:
-    TsmpptDynVals.m_v_pu = (float)regs[1];
-    TsmpptDynVals.m_v_pu /= 65536.0;
-    TsmpptDynVals.m_v_pu += (float)regs[0];
+    m_v_pu = (float)regs[1];
+    m_v_pu /= 65536.0;
+    m_v_pu += (float)regs[0];
 
     // Current scaling:
-    TsmpptDynVals.m_i_pu = (float)regs[3];
-    TsmpptDynVals.m_i_pu /= 65536.0;
-    TsmpptDynVals.m_i_pu += (float)regs[2];
-    QLOG_DEBUG() << "Tsmppt: m_v_pu =" << TsmpptDynVals.m_v_pu << " m_i_pu =" << TsmpptDynVals.m_i_pu;
+    m_i_pu = (float)regs[3];
+    m_i_pu /= 65536.0;
+    m_i_pu += (float)regs[2];
+    QLOG_DEBUG() << "Tsmppt: m_v_pu =" << m_v_pu << " m_i_pu =" << m_i_pu;
 
     // Firmware version:
     uint16_t ver = ((regs[4] >> 12) & 0x0f) * 1000;
     ver += ((regs[4] >> 8) & 0x0f) * 100;
     ver += ((regs[4] >> 4) & 0x0f) * 10;
     ver += regs[4] & 0x0f;
-    TsmpptStatVals.m_fw_ver = QString::number(ver);
+    m_fw_ver = QString::number(ver);
 
     // Read hardware version:
     readInputRegisters(REG_EHW_VERSION, 1, regs);
-    TsmpptStatVals.m_hw_ver = QString::number(regs[0] >> 8) + "." + QString::number(regs[0] & 0xff);
+    m_hw_ver = QString::number(regs[0] >> 8) + "." + QString::number(regs[0] & 0xff);
 
     // Read model
     readInputRegisters(REG_EMODEL, 1, regs);
-    TsmpptStatVals.m_model = regs[0];
+    m_model = regs[0];
 
     // Read serial number:
     readInputRegisters(REG_ESERIAL, 4, regs);
-    TsmpptStatVals.m_serial = (uint64_t)((regs[0] & 0xff) - 0x30) * 10000000;
-    TsmpptStatVals.m_serial += (uint64_t)((regs[0] >> 8) - 0x30) * 1000000;
-    TsmpptStatVals.m_serial += (uint64_t)((regs[1] & 0xff) - 0x30) * 100000;
-    TsmpptStatVals.m_serial += (uint64_t)((regs[1] >> 8) - 0x30) * 10000;
-    TsmpptStatVals.m_serial += (uint64_t)((regs[2] & 0xff) - 0x30) * 1000;
-    TsmpptStatVals.m_serial += (uint64_t)((regs[2] >> 8) - 0x30) * 100;
-    TsmpptStatVals.m_serial += (uint64_t)((regs[3] & 0xff) - 0x30) * 10;
-    TsmpptStatVals.m_serial += (uint64_t)((regs[3] >> 8) - 0x30);
+    m_serial = (uint64_t)((regs[0] & 0xff) - 0x30) * 10000000;
+    m_serial += (uint64_t)((regs[0] >> 8) - 0x30) * 1000000;
+    m_serial += (uint64_t)((regs[1] & 0xff) - 0x30) * 100000;
+    m_serial += (uint64_t)((regs[1] >> 8) - 0x30) * 10000;
+    m_serial += (uint64_t)((regs[2] & 0xff) - 0x30) * 1000;
+    m_serial += (uint64_t)((regs[2] >> 8) - 0x30) * 100;
+    m_serial += (uint64_t)((regs[3] & 0xff) - 0x30) * 10;
+    m_serial += (uint64_t)((regs[3] >> 8) - 0x30);
 
     mInitialized = true;
     emit tsmpptConnected();
@@ -179,15 +149,15 @@ void Tsmppt::updateValues()
     readInputRegisters(REG_FIRST_DYN, REG_LAST_DYN-REG_FIRST_DYN+1, reg);
 
     // Battery voltage:
-    double temp = (double)reg[REG_V_BAT-REG_FIRST_DYN] * TsmpptDynVals.m_v_pu / 32768.0;
+    double temp = (double)reg[REG_V_BAT-REG_FIRST_DYN] * m_v_pu / 32768.0;
     setBatteryVoltage(temp);
 
     // Max Battery voltage:
-    temp = (double)reg[REG_V_BAT_MAX-REG_FIRST_DYN] * TsmpptDynVals.m_v_pu / 32768.0;
+    temp = (double)reg[REG_V_BAT_MAX-REG_FIRST_DYN] * m_v_pu / 32768.0;
     setBatteryVoltageMaxDaily(temp);
 
     // Min Battery voltage:
-    temp = (double)reg[REG_V_BAT_MIN-REG_FIRST_DYN] * TsmpptDynVals.m_v_pu / 32768.0;
+    temp = (double)reg[REG_V_BAT_MIN-REG_FIRST_DYN] * m_v_pu / 32768.0;
     setBatteryVoltageMinDaily(temp);
 
     // Battery temperature:
@@ -195,25 +165,25 @@ void Tsmppt::updateValues()
     setBatteryTemperature(temp);
 
     // Charge current:
-    temp = (double)(int16_t)reg[REG_I_CC_1M-REG_FIRST_DYN] * TsmpptDynVals.m_i_pu / 32768.0;
+    temp = (double)(int16_t)reg[REG_I_CC_1M-REG_FIRST_DYN] * m_i_pu / 32768.0;
     if (temp < 0.0)
         temp = 0.0;
     setChargingCurrent(temp);
     
     // MPPT output power:
-    temp = (double)reg[REG_POUT-REG_FIRST_DYN] * TsmpptDynVals.m_i_pu * TsmpptDynVals.m_v_pu / 131072.0;
+    temp = (double)reg[REG_POUT-REG_FIRST_DYN] * m_i_pu * m_v_pu / 131072.0;
     setOutputPower(temp);
 
     // PV array voltage:
-    temp = (double)reg[REG_V_PV-REG_FIRST_DYN]  * TsmpptDynVals.m_v_pu / 32768.0;
+    temp = (double)reg[REG_V_PV-REG_FIRST_DYN]  * m_v_pu / 32768.0;
     setArrayVoltage(temp);
 
     // Max PV array voltage:
-    temp = (double)reg[REG_V_PV_MAX-REG_FIRST_DYN]  * TsmpptDynVals.m_v_pu / 32768.0;
+    temp = (double)reg[REG_V_PV_MAX-REG_FIRST_DYN]  * m_v_pu / 32768.0;
     setArrayVoltageMaxDaily(temp);
 
     // PV array current:
-    temp = (double)reg[REG_I_PV-REG_FIRST_DYN] * TsmpptDynVals.m_i_pu / 32768.0;
+    temp = (double)reg[REG_I_PV-REG_FIRST_DYN] * m_i_pu / 32768.0;
     setArrayCurrent(temp);
 
     // Whc daily:
@@ -231,7 +201,7 @@ void Tsmppt::updateValues()
     setWattHoursTotal(temp);
 
     // Pmax daily:
-    temp = (double)reg[REG_POUT_MAX_DAILY-REG_FIRST_DYN] * TsmpptDynVals.m_i_pu * TsmpptDynVals.m_v_pu / 131072.0;
+    temp = (double)reg[REG_POUT_MAX_DAILY-REG_FIRST_DYN] * m_i_pu * m_v_pu / 131072.0;
     setPowerMaxDaily(temp);
 
     // Charge state:
@@ -243,185 +213,185 @@ void Tsmppt::updateValues()
 
 QString Tsmppt::firmwareVersion() const
 {
-    return TsmpptStatVals.m_fw_ver;
+    return m_fw_ver;
 }
 
 QString Tsmppt::hardwareVersion() const
 {
-    return TsmpptStatVals.m_hw_ver;
+    return m_hw_ver;
 }
 
 uint64_t Tsmppt::serialNumber() const
 {
-    return TsmpptStatVals.m_serial;
+    return m_serial;
 }
 
 double Tsmppt::batteryVoltage() const
 {
-    return TsmpptDynVals.m_v_bat;
+    return m_v_bat;
 }
 
 void Tsmppt::setBatteryVoltage(double v)
 {
-    if (TsmpptDynVals.m_v_bat == v)
+    if (m_v_bat == v)
         return;
-    TsmpptDynVals.m_v_bat = v;
+    m_v_bat = v;
     emit batteryVoltageChanged();
 }
 
 double Tsmppt::batteryVoltageMaxDaily() const
 {
-    return TsmpptDynVals.m_v_bat_max;
+    return m_v_bat_max;
 }
 
 void Tsmppt::setBatteryVoltageMaxDaily(double v)
 {
-    if (TsmpptDynVals.m_v_bat_max == v)
+    if (m_v_bat_max == v)
         return;
-    TsmpptDynVals.m_v_bat_max = v;
+    m_v_bat_max = v;
     emit batteryVoltageMaxDailyChanged();
 }
 
 double Tsmppt::batteryVoltageMinDaily() const
 {
-    return TsmpptDynVals.m_v_bat_min;
+    return m_v_bat_min;
 }
 
 void Tsmppt::setBatteryVoltageMinDaily(double v)
 {
-    if (TsmpptDynVals.m_v_bat_min == v)
+    if (m_v_bat_min == v)
         return;
-    TsmpptDynVals.m_v_bat_min = v;
+    m_v_bat_min = v;
     emit batteryVoltageMinDailyChanged();
 }
 
 double Tsmppt::batteryTemperature() const
 {
-    return TsmpptDynVals.m_t_bat;
+    return m_t_bat;
 }
 
 void Tsmppt::setBatteryTemperature(double v)
 {
-    if (TsmpptDynVals.m_t_bat == v)
+    if (m_t_bat == v)
         return;
-    TsmpptDynVals.m_t_bat = v;
+    m_t_bat = v;
     emit batteryTemperatureChanged();
 }
 
 double Tsmppt::chargingCurrent() const
 {
-    return TsmpptDynVals.m_i_cc;
+    return m_i_cc;
 }
 
 double Tsmppt::outputPower() const
 {
-    return TsmpptDynVals.m_pout;
+    return m_pout;
 }
 
 void Tsmppt::setChargingCurrent(double v)
 {
-    if (TsmpptDynVals.m_i_cc == v)
+    if (m_i_cc == v)
         return;
-    TsmpptDynVals.m_i_cc = v;
+    m_i_cc = v;
     emit chargingCurrentChanged();
 }
 
 void Tsmppt::setOutputPower(double v)
 {
-    if (TsmpptDynVals.m_pout == v)
+    if (m_pout == v)
         return;
-    TsmpptDynVals.m_pout = v;
+    m_pout = v;
     emit outputPowerChanged();
 }
 
 double Tsmppt::arrayCurrent() const
 {
-    return TsmpptDynVals.m_i_pv;
+    return m_i_pv;
 }
 
 void Tsmppt::setArrayCurrent(double v)
 {
-    if (TsmpptDynVals.m_i_pv == v)
+    if (m_i_pv == v)
         return;
-    TsmpptDynVals.m_i_pv = v;
+    m_i_pv = v;
     emit arrayCurrentChanged();
 }
 
 double Tsmppt::arrayVoltage() const
 {
-    return TsmpptDynVals.m_v_pv;
+    return m_v_pv;
 }
 
 void Tsmppt::setArrayVoltage(double v)
 {
-    if (TsmpptDynVals.m_v_pv == v)
+    if (m_v_pv == v)
         return;
-    TsmpptDynVals.m_v_pv = v;
+    m_v_pv = v;
     emit arrayVoltageChanged();
 }
 
 double Tsmppt::arrayVoltageMaxDaily() const
 {
-    return TsmpptDynVals.m_v_pv_max;
+    return m_v_pv_max;
 }
 
 void Tsmppt::setArrayVoltageMaxDaily(double v)
 {
-    if (TsmpptDynVals.m_v_pv_max == v)
+    if (m_v_pv_max == v)
         return;
-    TsmpptDynVals.m_v_pv_max = v;
+    m_v_pv_max = v;
     emit arrayVoltageMaxDailyChanged();
 }
 
 double Tsmppt::powerMaxDaily() const
 {
-    return TsmpptDynVals.m_p_max;
+    return m_p_max;
 }
 
 void Tsmppt::setPowerMaxDaily(double v)
 {
-    if (TsmpptDynVals.m_p_max == v)
+    if (m_p_max == v)
         return;
-    TsmpptDynVals.m_p_max = v;
+    m_p_max = v;
     emit powerMaxDailyChanged();
 }
 
 double Tsmppt::wattHoursDaily() const
 {
-    return TsmpptDynVals.m_whc;
+    return m_whc;
 }
 
 void Tsmppt::setWattHoursDaily(double v)
 {
-    if (TsmpptDynVals.m_whc == v)
+    if (m_whc == v)
         return;
-    TsmpptDynVals.m_whc = v;
-    emit wattHoursTotalChanged();
+    m_whc = v;
+    emit wattHoursDailyChanged();
 }
 
 double Tsmppt::wattHoursTotal() const
 {
-    return TsmpptDynVals.m_whc_tot;
+    return m_whc_tot;
 }
 
 void Tsmppt::setWattHoursTotal(double v)
 {
-    if (TsmpptDynVals.m_whc_tot == v)
+    if (m_whc_tot == v)
         return;
-    TsmpptDynVals.m_whc_tot = v;
+    m_whc_tot = v;
     emit wattHoursTotalChanged();
 }
 
 double Tsmppt::wattHoursTotalResettable() const
 {
-    return TsmpptDynVals.m_whc_tot_res;
+    return m_whc_tot_res;
 }
 
 void Tsmppt::setWattHoursTotalResettable(double v)
 {
-    if (TsmpptDynVals.m_whc_tot_res == v)
+    if (m_whc_tot_res == v)
         return;
-    TsmpptDynVals.m_whc_tot_res = v;
+    m_whc_tot_res = v;
     emit wattHoursTotalResettableChanged();
 }
 
@@ -440,47 +410,47 @@ int Tsmppt::chargeState() const
     // 8 EQUALIZE           7 EQUALIZE
     // 9 SLAVE              11 OTHER
     const int bscs[10] = {0,0,0,0,2,3,4,5,7,11};
-    return bscs[TsmpptDynVals.m_cs];
+    return bscs[m_cs];
 }
 
 void Tsmppt::setChargeState(int v)
 {
-    if (TsmpptDynVals.m_cs == v)
+    if (m_cs == v)
         return;
-    TsmpptDynVals.m_cs = v;
+    m_cs = v;
     emit chargeStateChanged();
 }
 
 int Tsmppt::timeInAbsorption() const
 {
-    return TsmpptDynVals.m_t_abs;
+    return m_t_abs;
 }
 
 void Tsmppt::setTimeInAbsorption(int v)
 {
-    if (TsmpptDynVals.m_t_abs == v)
+    if (m_t_abs == v)
         return;
-    TsmpptDynVals.m_t_abs = v;
+    m_t_abs = v;
     emit timeInAbsorptionChanged();
 }
 
 int Tsmppt::timeInFloat() const
 {
-    return TsmpptDynVals.m_t_float;
+    return m_t_float;
 }
 
 void Tsmppt::setTimeInFloat(int v)
 {
-    if (TsmpptDynVals.m_t_float == v)
+    if (m_t_float == v)
         return;
-    TsmpptDynVals.m_t_float = v;
+    m_t_float = v;
     emit timeInAbsorptionChanged();
 }
 
 QString Tsmppt::productName() const
 {
     QString name;
-    switch (TsmpptStatVals.m_model)
+    switch (m_model)
     {
         case 0:
             name = "TriStar MPPT 45";

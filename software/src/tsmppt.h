@@ -116,6 +116,30 @@ private:
     QTimer *mTimer;
     modbus_t *mCtx;
     uint16_t *mModbusRegs;
+    // Dynamic values:
+    double m_v_bat;         // Battery voltage
+    double m_v_bat_max;     // Max battery voltage, daily
+    double m_v_bat_min;     // Min battery voltage, daily
+    double m_t_bat;         // Battery temperature
+    double m_i_cc;          // Charging current
+    double m_v_pv;          // PV array voltage 
+    double m_pout;          // Output power
+    double m_i_pv;          // PV array current
+    double m_p_max;         // Max power, daily
+    double m_whc;           // Watt hours, daily
+    double m_whc_tot;       // Watt hours, total
+    double m_whc_tot_res;   // Watt hours, total resettable
+    double m_v_pv_max;      // Max PV voltage, daily
+    int m_cs;               // Charge state
+    int m_t_abs;            // Time in absorption
+    int m_t_float;          // Time in float
+    // Static values (read once):
+    double m_v_pu;          // Voltage scaling
+    double m_i_pu;          // Current scaling
+    QString m_fw_ver;
+    QString m_hw_ver;
+    uint64_t m_serial;
+    uint16_t m_model;
 };
 
 #endif // TSMPPT_H
