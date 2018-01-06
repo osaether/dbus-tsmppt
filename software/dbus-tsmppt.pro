@@ -8,7 +8,7 @@ QMAKE_CXXFLAGS += -Wno-psabi
 # solved in newer QT versions.
 QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 
-LIBS += -L/usr/local/lib -lmodbus
+LIBS += -lmodbus
 QT += core network dbus
 QT -= gui
 
@@ -18,12 +18,14 @@ CONFIG += console
 CONFIG -= app_bundle
 DEFINES += VERSION=\\\"$${VERSION}\\\"
 
+PKGCONFIG += dbus-1 libmodbus
+CONFIG += link_pkgconfig
+
 include(ext/qslog/QsLog.pri)
 
 INCLUDEPATH += \
                ext/qslog \
                src/velib/inc \
-               /usr/local/include/modbus \
                src
 
 # Input
