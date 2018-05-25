@@ -1,12 +1,14 @@
 # Application version and revision
 VERSION = 1.5
 
+# Add more folders to ship with the application here
 unix {
     bindir = $$(bindir)
     DESTDIR = $$(DESTDIR)
     isEmpty(bindir) {
         bindir = /usr/local/bin
     }
+    INSTALLS += target
     target.path = $${DESTDIR}$${bindir}
 }
 
