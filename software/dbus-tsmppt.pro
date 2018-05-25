@@ -1,12 +1,14 @@
 # Application version and revision
 VERSION = 1.4
 
-# suppress the mangling of va_arg has changed for gcc 4.4
-QMAKE_CXXFLAGS += -Wno-psabi
-
-# these warnings appear when compiling with QT4.8.3-debug. Problem appears to be
-# solved in newer QT versions.
-QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
+unix {
+    bindir = $$(bindir)
+    DESTDIR = $$(DESTDIR)
+    isEmpty(bindir) {
+        bindir = /usr/local/bin
+    }
+    target.path = $${DESTDIR}$${bindir}
+}
 
 LIBS += -lmodbus
 QT += core network dbus
@@ -54,4 +56,11 @@ SOURCES += src/tsmppt.cpp \
            src/velib/src/qt/v_busitem_private_cons.cpp \
            src/velib/src/qt/v_busitem_private_prod.cpp \
            src/velib/src/qt/v_busitem_proxy.cpp
-	
+
+# suppress the mangling of va_arg has changed for gcc 4.4
+QMAKE_CXXFLAGS += -Wno-psabi
+
+# these warnings appear when compiling with QT4.8.3-debug. Problem appears to be
+# solved in newer QT versions.
+QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
+
