@@ -1,5 +1,5 @@
 # Application version and revision
-VERSION = 1.4
+VERSION = 1.5
 
 unix {
     bindir = $$(bindir)
