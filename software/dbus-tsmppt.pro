@@ -18,10 +18,11 @@ TEMPLATE = app
 TARGET = dbus-tsmppt
 CONFIG += console
 CONFIG -= app_bundle
+
 DEFINES += VERSION=\\\"$${VERSION}\\\"
 
-PKGCONFIG += dbus-1 libmodbus
-CONFIG += link_pkgconfig
+#PKGCONFIG += dbus-1 libmodbus
+#CONFIG += link_pkgconfig
 
 include(ext/qslog/QsLog.pri)
 
