@@ -8,17 +8,17 @@ Building
 
 In order to build the application for the CCGX you need a linux system, a recent version of the QT libraries and the CCGX SDK. You can find instructions on installing the CCGX SDK here:
 
-https://www.victronenergy.com/live/open_source:ccgx:setup_development_environment
+https://github.com/victronenergy/venus/wiki/howto-install-and-use-the-sdk
 
 You will also need libmodbus v3.1.2 or higher (http://libmodbus.org/).
 
 Clone repo with `git clone --recursive https://github.com/osaether/dbus-tsmppt.git`
 
-Edit the path to libmodbus in software/dbus-tsmppt.pro, then
-
     cd software
-    qmake
+    qmake LIBS+=-L/usr/local/lib/ INCLUDEPATH+=/usr/local/include/modbus
     make
+
+Change LIBS and INCLUDEPATH above according to your installation.
 
 Running the application on CCGX
 ===============================
