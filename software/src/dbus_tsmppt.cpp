@@ -24,8 +24,6 @@ void DBusTsmppt::CreateTsmppt()
        return;
     if (mPortNumber->getValue().toInt() == 0)
        return;
-    QLOG_DEBUG() << "CreateTsmppt:mIpAddress=" << mIpAddress->getValue();
-    QLOG_DEBUG() << "CreateTsmppt:mPortNumber=" << mPortNumber->getValue();
     Tsmppt *mTsmppt = new Tsmppt(mIpAddress->getValue().toString(), mPortNumber->getValue().toInt());
     connect(mTsmppt, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
     mTsmpptBridge = new DBusTsmpptBridge(mTsmppt, this);
@@ -33,12 +31,14 @@ void DBusTsmppt::CreateTsmppt()
 
 void DBusTsmppt::onIpAddressChanged()
 {
+    QLOG_INFO() << "IP Address changed";
     delete mTsmpptBridge;
     CreateTsmppt();
 }
 
 void DBusTsmppt::onPortNumberChanged()
 {
+    QLOG_INFO() << "Port number changed";
     delete mTsmpptBridge;
     CreateTsmppt();
 }
