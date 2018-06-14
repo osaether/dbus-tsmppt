@@ -23,22 +23,27 @@ void initLogger(QsLogging::Level logLevel)
 }
 
 
-void initDBus(const QString &dbusAddress)
+bool initDBus(const QString &dbusAddress)
 {
     VBusItems::setDBusAddress(dbusAddress);
 
     QLOG_INFO() << "Wait for local settings on DBus(" << dbusAddress << ")...";
     VBusItem settings;
     settings.consume("com.victronenergy.settings", "/Settings");
-    for (;;) {
+    for (int i=0; i<15; i++) {
         QVariant reply = settings.getValue();
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
         if (reply.isValid())
-            break;
-        usleep(500000);
+        {
+            QLOG_INFO() << "Local settings found";
+            return true;
+        }
+        QEventLoop l;
+        QTimer::singleShot(2000, &l, SLOT(quit()));
+        l.exec();
         QLOG_INFO() << "Waiting...";
     }
-    QLOG_INFO() << "Local settings found";
+    return false;
 }
 
 
@@ -138,7 +143,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    initDBus(dbusAddress);
+    if (!initDBus(dbusAddress)) {
+        return 1; // Not success
+    }
+
     addSetting("/Settings/TristarMPPT/IPAddress", "", "", "");
     addSetting("/Settings/TristarMPPT/PortNumber", 502, 0, 0);
     DBusTsmppt a(0);
