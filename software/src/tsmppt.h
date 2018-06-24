@@ -110,7 +110,7 @@ private slots:
     void onTimeout();
 
 private:
-    void readInputRegisters(int addr, int nb, uint16_t *dest);
+    bool readInputRegisters(int addr, int nb, uint16_t *dest);
     void updateValues();
     bool mInitialized;
     QTimer *mTimer;

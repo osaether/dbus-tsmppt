@@ -448,7 +448,7 @@ void Tsmppt::setTimeInFloat(int v)
     if (m_t_float == v)
         return;
     m_t_float = v;
-    emit timeInAbsorptionChanged();
+    emit timeInFloatChanged();
 }
 
 QString Tsmppt::productName() const
