@@ -149,6 +149,7 @@ int main(int argc, char *argv[])
 
     addSetting("/Settings/TristarMPPT/IPAddress", "", "", "");
     addSetting("/Settings/TristarMPPT/PortNumber", 502, 0, 0);
+    addSetting("/Settings/TristarMPPT/Interval", 5000, 0, 0);
     DBusTsmppt a(0);
 
     app.connect(&a, SIGNAL(terminateApp()), &app, SLOT(quit()));

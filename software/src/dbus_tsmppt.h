@@ -18,12 +18,14 @@ signals:
 private slots:
     void onIpAddressChanged();
     void onPortNumberChanged();
+    void onIntervalChanged();
     void onConnectionLost();
 
 private:
     DBusTsmpptBridge *mTsmpptBridge;
     VBusItem *mIpAddress;
     VBusItem *mPortNumber;
+    VBusItem *mInterval;
     void CreateTsmppt();
 };
 

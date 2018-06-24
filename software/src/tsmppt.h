@@ -28,7 +28,7 @@ class Tsmppt : public QObject
     Q_PROPERTY(int timeInFloat READ timeInFloat WRITE setTimeInFloat NOTIFY timeInFloatChanged)
 
 public:
-    Tsmppt(const QString &IPAddress, const int port = 502, int slave = 1, QObject *parent = 0);
+    Tsmppt(const QString &IPAddress, const int port = 502, int interval = 5000, int slave = 1, QObject *parent = 0);
     ~Tsmppt();
 
     double batteryVoltage() const;

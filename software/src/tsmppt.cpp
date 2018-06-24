@@ -29,10 +29,10 @@ const int REG_EHW_VERSION   = 57549;
 const int REG_ESERIAL       = 57536;
 const int REG_EMODEL        = 57548;
 
-Tsmppt::Tsmppt(const QString &IPAddress, const int port, int slave, QObject *parent):
+Tsmppt::Tsmppt(const QString &IPAddress, const int port, int interval, int slave, QObject *parent):
 QObject(parent), mInitialized(false), mTimer(new QTimer(this))
 {
-    QLOG_DEBUG() << "Tsmppt::Tsmppt(" << IPAddress << ", " << port << ")";
+    QLOG_DEBUG() << "Tsmppt::Tsmppt(" << IPAddress << ", " << port << ", " << interval << ", " << slave << ")";
     mCtx = modbus_new_tcp_pi(IPAddress.toStdString().c_str(), QString::number(port).toStdString().c_str());
     Q_ASSERT(mCtx != NULL);
     // modbus_set_debug(mCtx, true);
@@ -49,7 +49,7 @@ QObject(parent), mInitialized(false), mTimer(new QTimer(this))
     modbus_set_byte_timeout(mCtx, &to);
 #endif
     modbus_set_slave(mCtx, slave);
-    mTimer->setInterval(2000);
+    mTimer->setInterval(interval);
     mTimer->start();
     connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
 }
