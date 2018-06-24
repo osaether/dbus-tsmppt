@@ -61,25 +61,24 @@ Tsmppt::~Tsmppt()
     modbus_free(mCtx);
 }
 
-void Tsmppt::readInputRegisters(int addr, int nb, uint16_t *dest)
+bool Tsmppt::readInputRegisters(int addr, int nb, uint16_t *dest)
 {
-    if(modbus_read_input_registers(mCtx, addr, nb, dest) == -1)
+    int tries = 5;
+    while (tries > 0)
     {
-        if (errno == ECONNRESET)
+        if(modbus_read_input_registers(mCtx, addr, nb, dest) != -1)
         {
-            // Try one more time before giving up:
-            if(modbus_read_input_registers(mCtx, addr, nb, dest) == -1)
-            {
-                QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno) << "Trying to reconnect";
-                emit connectionLost();
-            }
+            return true;
         }
-        else if (errno != ETIMEDOUT)
+        if (tries > 1)
         {
-            QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno) << "Trying to reconnect";
-            emit connectionLost();
+            QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno) << "Retrying...";
         }
+        tries--;
     }
+    QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno) << "Trying to reconnect";
+    emit connectionLost();
+    return false;
 }
 
 bool Tsmppt::initialize()
@@ -95,7 +94,8 @@ bool Tsmppt::initialize()
     }
 
     uint16_t regs[6];
-    readInputRegisters(REG_V_PU, 6, regs);
+    if (!readInputRegisters(REG_V_PU, 6, regs))
+        return false;
     
     // Voltage scaling:
     m_v_pu = (float)regs[1];
@@ -116,15 +116,18 @@ bool Tsmppt::initialize()
     m_fw_ver = QString::number(ver);
 
     // Read hardware version:
-    readInputRegisters(REG_EHW_VERSION, 1, regs);
+    if (!readInputRegisters(REG_EHW_VERSION, 1, regs))
+        return false;
     m_hw_ver = QString::number(regs[0] >> 8) + "." + QString::number(regs[0] & 0xff);
 
     // Read model
-    readInputRegisters(REG_EMODEL, 1, regs);
+    if (!readInputRegisters(REG_EMODEL, 1, regs))
+        return false;
     m_model = regs[0];
 
     // Read serial number:
-    readInputRegisters(REG_ESERIAL, 4, regs);
+    if (!readInputRegisters(REG_ESERIAL, 4, regs))
+        return false;
     m_serial = (uint64_t)((regs[0] & 0xff) - 0x30) * 10000000;
     m_serial += (uint64_t)((regs[0] >> 8) - 0x30) * 1000000;
     m_serial += (uint64_t)((regs[1] & 0xff) - 0x30) * 100000;
@@ -146,69 +149,70 @@ void Tsmppt::updateValues()
 
     QLOG_DEBUG() << "Tsmppt::updateValues()";
 
-    readInputRegisters(REG_FIRST_DYN, REG_LAST_DYN-REG_FIRST_DYN+1, reg);
+    if (readInputRegisters(REG_FIRST_DYN, REG_LAST_DYN-REG_FIRST_DYN+1, reg))
+    {
+        // Battery voltage:
+        double temp = (double)reg[REG_V_BAT-REG_FIRST_DYN] * m_v_pu / 32768.0;
+        setBatteryVoltage(temp);
 
-    // Battery voltage:
-    double temp = (double)reg[REG_V_BAT-REG_FIRST_DYN] * m_v_pu / 32768.0;
-    setBatteryVoltage(temp);
+        // Max Battery voltage:
+        temp = (double)reg[REG_V_BAT_MAX-REG_FIRST_DYN] * m_v_pu / 32768.0;
+        setBatteryVoltageMaxDaily(temp);
 
-    // Max Battery voltage:
-    temp = (double)reg[REG_V_BAT_MAX-REG_FIRST_DYN] * m_v_pu / 32768.0;
-    setBatteryVoltageMaxDaily(temp);
+        // Min Battery voltage:
+        temp = (double)reg[REG_V_BAT_MIN-REG_FIRST_DYN] * m_v_pu / 32768.0;
+        setBatteryVoltageMinDaily(temp);
 
-    // Min Battery voltage:
-    temp = (double)reg[REG_V_BAT_MIN-REG_FIRST_DYN] * m_v_pu / 32768.0;
-    setBatteryVoltageMinDaily(temp);
+        // Battery temperature:
+        temp = (double)(int16_t)reg[REG_T_BAT-REG_FIRST_DYN];
+        setBatteryTemperature(temp);
 
-    // Battery temperature:
-    temp = (double)(int16_t)reg[REG_T_BAT-REG_FIRST_DYN];
-    setBatteryTemperature(temp);
+        // Charge current:
+        temp = (double)(int16_t)reg[REG_I_CC_1M-REG_FIRST_DYN] * m_i_pu / 32768.0;
+        if (temp < 0.0)
+            temp = 0.0;
+        setChargingCurrent(temp);
+        
+        // MPPT output power:
+        temp = (double)reg[REG_POUT-REG_FIRST_DYN] * m_i_pu * m_v_pu / 131072.0;
+        setOutputPower(temp);
 
-    // Charge current:
-    temp = (double)(int16_t)reg[REG_I_CC_1M-REG_FIRST_DYN] * m_i_pu / 32768.0;
-    if (temp < 0.0)
-        temp = 0.0;
-    setChargingCurrent(temp);
-    
-    // MPPT output power:
-    temp = (double)reg[REG_POUT-REG_FIRST_DYN] * m_i_pu * m_v_pu / 131072.0;
-    setOutputPower(temp);
+        // PV array voltage:
+        temp = (double)reg[REG_V_PV-REG_FIRST_DYN]  * m_v_pu / 32768.0;
+        setArrayVoltage(temp);
 
-    // PV array voltage:
-    temp = (double)reg[REG_V_PV-REG_FIRST_DYN]  * m_v_pu / 32768.0;
-    setArrayVoltage(temp);
+        // Max PV array voltage:
+        temp = (double)reg[REG_V_PV_MAX-REG_FIRST_DYN]  * m_v_pu / 32768.0;
+        setArrayVoltageMaxDaily(temp);
 
-    // Max PV array voltage:
-    temp = (double)reg[REG_V_PV_MAX-REG_FIRST_DYN]  * m_v_pu / 32768.0;
-    setArrayVoltageMaxDaily(temp);
+        // PV array current:
+        temp = (double)reg[REG_I_PV-REG_FIRST_DYN] * m_i_pu / 32768.0;
+        setArrayCurrent(temp);
 
-    // PV array current:
-    temp = (double)reg[REG_I_PV-REG_FIRST_DYN] * m_i_pu / 32768.0;
-    setArrayCurrent(temp);
+        // Whc daily:
+        temp = (double)reg[REG_WHC_DAILY-REG_FIRST_DYN];
+        // CCGX expects kWh:
+        temp /= 1000.0;
+        setWattHoursDaily(temp);
 
-    // Whc daily:
-    temp = (double)reg[REG_WHC_DAILY-REG_FIRST_DYN];
-    // CCGX expects kWh:
-    temp /= 1000.0;
-    setWattHoursDaily(temp);
+        // Whc total:
+        temp = (double)reg[REG_KWH_TOTAL_RES-REG_FIRST_DYN];
+        setWattHoursTotalResettable(temp);
 
-    // Whc total:
-    temp = (double)reg[REG_KWH_TOTAL_RES-REG_FIRST_DYN];
-    setWattHoursTotalResettable(temp);
+        // Whc total:
+        temp = (double)reg[REG_KWH_TOTAL-REG_FIRST_DYN];
+        setWattHoursTotal(temp);
 
-    // Whc total:
-    temp = (double)reg[REG_KWH_TOTAL-REG_FIRST_DYN];
-    setWattHoursTotal(temp);
+        // Pmax daily:
+        temp = (double)reg[REG_POUT_MAX_DAILY-REG_FIRST_DYN] * m_i_pu * m_v_pu / 131072.0;
+        setPowerMaxDaily(temp);
 
-    // Pmax daily:
-    temp = (double)reg[REG_POUT_MAX_DAILY-REG_FIRST_DYN] * m_i_pu * m_v_pu / 131072.0;
-    setPowerMaxDaily(temp);
+        // Charge state:
+        setChargeState(reg[REG_CHARGE_STATE-REG_FIRST_DYN]);
 
-    // Charge state:
-    setChargeState(reg[REG_CHARGE_STATE-REG_FIRST_DYN]);
-
-    setTimeInAbsorption(reg[REG_T_ABS-REG_FIRST_DYN]/60);
-    setTimeInFloat(reg[REG_T_FLOAT-REG_FIRST_DYN]/60);
+        setTimeInAbsorption(reg[REG_T_ABS-REG_FIRST_DYN]/60);
+        setTimeInFloat(reg[REG_T_FLOAT-REG_FIRST_DYN]/60);
+    }
 }
 
 QString Tsmppt::firmwareVersion() const
