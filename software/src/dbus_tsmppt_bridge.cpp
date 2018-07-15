@@ -38,8 +38,8 @@ DBusTsmpptBridge::DBusTsmpptBridge(Tsmppt *tsmppt, QObject *parent):
     produce(mTsmppt, "powerMaxDaily", "/History/Daily/0/MaxPower", "W", 0);
     produce(mTsmppt, "arrayVoltageMaxDaily", "/History/Daily/0/MaxPvVoltage", "V", 2);
     produce(mTsmppt, "wattHoursDaily", "/History/Daily/0/Yield", "kWh", 2);
-    produce(mTsmppt, "wattHoursTotalResettable", "/Yield/User", "kWh", 0);
-    produce(mTsmppt, "wattHoursTotal", "/Yield/System", "kWh", 0);
+    produce(mTsmppt, "yieldUser", "/Yield/User", "kWh", 0);
+    produce(mTsmppt, "yieldSystem", "/Yield/System", "kWh", 0);
     produce(mTsmppt, "timeInAbsorption", "/History/Daily/0/TimeInAbsorption");
     // TSMPPT does not give time in bulk:
     // produce(mTsmppt, "timeInBulk", "/History/Daily/0/TimeInBulk");

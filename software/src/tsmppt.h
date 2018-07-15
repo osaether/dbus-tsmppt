@@ -26,6 +26,8 @@ class Tsmppt : public QObject
     Q_PROPERTY(int chargeState READ chargeState WRITE setChargeState NOTIFY chargeStateChanged)
     Q_PROPERTY(int timeInAbsorption READ timeInAbsorption WRITE setTimeInAbsorption NOTIFY timeInAbsorptionChanged)
     Q_PROPERTY(int timeInFloat READ timeInFloat WRITE setTimeInFloat NOTIFY timeInFloatChanged)
+    Q_PROPERTY(double yieldUser READ yieldUser WRITE setYieldUser NOTIFY yieldUserChanged)
+    Q_PROPERTY(double yieldSystem READ yieldSystem WRITE setYieldSystem NOTIFY yieldSystemChanged)
 
 public:
     Tsmppt(const QString &IPAddress, const int port = 502, int interval = 5000, int slave = 1, QObject *parent = 0);
@@ -79,6 +81,12 @@ public:
     int timeInFloat() const;
     void setTimeInFloat(int v);
 
+    double yieldUser() const;
+    void setYieldUser(double v);
+
+    double yieldSystem() const;
+    void setYieldSystem(double v);
+
     QString firmwareVersion() const;
     QString hardwareVersion() const;
     uint64_t serialNumber() const;
@@ -105,6 +113,8 @@ signals:
     void connectionLost();
     void timeInAbsorptionChanged();
     void timeInFloatChanged();
+    void yieldUserChanged();
+    void yieldSystemChanged();
 
 private slots:
     void onTimeout();
@@ -133,6 +143,9 @@ private:
     int m_cs;               // Charge state
     int m_t_abs;            // Time in absorption
     int m_t_float;          // Time in float
+    double yield_user;      // Watt hours, total since last reset
+    double yield_system;    // Watt hours, total
+
     // Static values (read once):
     double m_v_pu;          // Voltage scaling
     double m_i_pu;          // Current scaling

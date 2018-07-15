@@ -30,7 +30,7 @@ const int REG_ESERIAL       = 57536;
 const int REG_EMODEL        = 57548;
 
 Tsmppt::Tsmppt(const QString &IPAddress, const int port, int interval, int slave, QObject *parent):
-QObject(parent), mInitialized(false), mTimer(new QTimer(this))
+QObject(parent), mInitialized(false), mTimer(new QTimer(this)), yield_user(0), yield_system(0)
 {
     QLOG_DEBUG() << "Tsmppt::Tsmppt(" << IPAddress << ", " << port << ", " << interval << ", " << slave << ")";
     mCtx = modbus_new_tcp_pi(IPAddress.toStdString().c_str(), QString::number(port).toStdString().c_str());
@@ -198,10 +198,12 @@ void Tsmppt::updateValues()
         // Whc total:
         temp = (double)reg[REG_KWH_TOTAL_RES-REG_FIRST_DYN];
         setWattHoursTotalResettable(temp);
+        setYieldUser(m_whc+temp);
 
         // Whc total:
         temp = (double)reg[REG_KWH_TOTAL-REG_FIRST_DYN];
         setWattHoursTotal(temp);
+        setYieldSystem(m_whc+temp);
 
         // Pmax daily:
         temp = (double)reg[REG_POUT_MAX_DAILY-REG_FIRST_DYN] * m_i_pu * m_v_pu / 131072.0;
@@ -441,6 +443,32 @@ void Tsmppt::setTimeInAbsorption(int v)
 int Tsmppt::timeInFloat() const
 {
     return m_t_float;
+}
+
+void Tsmppt::setYieldUser(double v)
+{
+    if (yield_user == v)
+        return;
+    yield_user = v;
+    emit yieldUserChanged();
+}
+
+double Tsmppt::yieldUser() const
+{
+    return yield_user;
+}
+
+void Tsmppt::setYieldSystem(double v)
+{
+    if (yield_system == v)
+        return;
+    yield_system = v;
+    emit yieldSystemChanged();
+}
+
+double Tsmppt::yieldSystem() const
+{
+    return yield_system;
 }
 
 void Tsmppt::setTimeInFloat(int v)
