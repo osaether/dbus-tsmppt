@@ -57,7 +57,6 @@ QObject(parent), mInitialized(false), mTimer(new QTimer(this)), yield_user(0), y
 Tsmppt::~Tsmppt()
 {
     QLOG_DEBUG() << "Tsmppt::~Tsmppt()";
-    modbus_close(mCtx);
     modbus_free(mCtx);
 }
 
@@ -95,7 +94,10 @@ bool Tsmppt::initialize()
 
     uint16_t regs[6];
     if (!readInputRegisters(REG_V_PU, 6, regs))
+    {
+        modbus_close(mCtx);
         return false;
+    }
     
     // Voltage scaling:
     m_v_pu = (float)regs[1];
@@ -117,17 +119,26 @@ bool Tsmppt::initialize()
 
     // Read hardware version:
     if (!readInputRegisters(REG_EHW_VERSION, 1, regs))
+    {
+        modbus_close(mCtx);
         return false;
+    }
     m_hw_ver = QString::number(regs[0] >> 8) + "." + QString::number(regs[0] & 0xff);
 
     // Read model
     if (!readInputRegisters(REG_EMODEL, 1, regs))
+    {
+        modbus_close(mCtx);
         return false;
+    }
     m_model = regs[0];
 
     // Read serial number:
     if (!readInputRegisters(REG_ESERIAL, 4, regs))
+    {
+        modbus_close(mCtx);
         return false;
+    }
     m_serial = (uint64_t)((regs[0] & 0xff) - 0x30) * 10000000;
     m_serial += (uint64_t)((regs[0] >> 8) - 0x30) * 1000000;
     m_serial += (uint64_t)((regs[1] & 0xff) - 0x30) * 100000;
@@ -137,6 +148,7 @@ bool Tsmppt::initialize()
     m_serial += (uint64_t)((regs[3] & 0xff) - 0x30) * 10;
     m_serial += (uint64_t)((regs[3] >> 8) - 0x30);
 
+    modbus_close(mCtx);
     mInitialized = true;
     emit tsmpptConnected();
     QLOG_DEBUG() << "Tsmppt::initialize(end)";
@@ -148,6 +160,12 @@ void Tsmppt::updateValues()
     uint16_t reg[REG_LAST_DYN-REG_FIRST_DYN+1];
 
     QLOG_DEBUG() << "Tsmppt::updateValues()";
+
+    if (modbus_connect(mCtx) == -1)
+    {
+        QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno);
+        return;
+    }
 
     if (readInputRegisters(REG_FIRST_DYN, REG_LAST_DYN-REG_FIRST_DYN+1, reg))
     {
@@ -215,6 +233,7 @@ void Tsmppt::updateValues()
         setTimeInAbsorption(reg[REG_T_ABS-REG_FIRST_DYN]/60);
         setTimeInFloat(reg[REG_T_FLOAT-REG_FIRST_DYN]/60);
     }
+    modbus_close(mCtx);
 }
 
 QString Tsmppt::firmwareVersion() const
