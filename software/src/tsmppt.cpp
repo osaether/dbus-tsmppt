@@ -29,8 +29,12 @@ const int REG_EHW_VERSION   = 57549;
 const int REG_ESERIAL       = 57536;
 const int REG_EMODEL        = 57548;
 
+const int CS_NIGHT          = 3;
+const int CS_BULK           = 5;
+
+
 Tsmppt::Tsmppt(const QString &IPAddress, const int port, int interval, int slave, QObject *parent):
-QObject(parent), mInitialized(false), mTimer(new QTimer(this)), yield_user(0), yield_system(0)
+QObject(parent), mInitialized(false), mTimer(new QTimer(this)), m_interval(interval), m_t_bulk(0), m_t_bulk_ms(0), yield_user(0), yield_system(0)
 {
     QLOG_DEBUG() << "Tsmppt::Tsmppt(" << IPAddress << ", " << port << ", " << interval << ", " << slave << ")";
     mCtx = modbus_new_tcp_pi(IPAddress.toStdString().c_str(), QString::number(port).toStdString().c_str());
@@ -49,7 +53,7 @@ QObject(parent), mInitialized(false), mTimer(new QTimer(this)), yield_user(0), y
     modbus_set_byte_timeout(mCtx, &to);
 #endif
     modbus_set_slave(mCtx, slave);
-    mTimer->setInterval(interval);
+    mTimer->setInterval(m_interval);
     mTimer->start();
     connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
 }
@@ -230,6 +234,11 @@ void Tsmppt::updateValues()
         // Charge state:
         setChargeState(reg[REG_CHARGE_STATE-REG_FIRST_DYN]);
 
+        if (m_cs == CS_BULK)        
+            m_t_bulk_ms += m_interval;
+        else if (m_cs == CS_NIGHT)
+            m_t_bulk_ms = 0;
+        setTimeInBulk((int)(m_t_bulk_ms/(1000*60)));
         setTimeInAbsorption(reg[REG_T_ABS-REG_FIRST_DYN]/60);
         setTimeInFloat(reg[REG_T_FLOAT-REG_FIRST_DYN]/60);
     }
@@ -429,7 +438,7 @@ int Tsmppt::chargeState() const
     // 2 DISCONNECT         0 OFF
     // 3 NIGHT              0 OFF
     // 4 FAULT              2 FAULT
-    // 5 MNPPT              3 BULK
+    // 5 MPPT               3 BULK
     // 6 ABSORPTION         4 ABSORPTION
     // 7 FLOAT              5 FLOAT
     // 8 EQUALIZE           7 EQUALIZE
@@ -462,6 +471,20 @@ void Tsmppt::setTimeInAbsorption(int v)
 int Tsmppt::timeInFloat() const
 {
     return m_t_float;
+}
+
+
+void Tsmppt::setTimeInBulk(int v)
+{
+    if (m_t_bulk == v)
+        return;
+    m_t_bulk = v;
+    emit timeInBulkChanged();
+}
+
+int Tsmppt::timeInBulk() const
+{
+    return m_t_bulk;
 }
 
 void Tsmppt::setYieldUser(double v)

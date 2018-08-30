@@ -41,11 +41,8 @@ DBusTsmpptBridge::DBusTsmpptBridge(Tsmppt *tsmppt, QObject *parent):
     produce(mTsmppt, "yieldUser", "/Yield/User", "kWh", 0);
     produce(mTsmppt, "yieldSystem", "/Yield/System", "kWh", 0);
     produce(mTsmppt, "timeInAbsorption", "/History/Daily/0/TimeInAbsorption");
-    // TSMPPT does not give time in bulk:
-    // produce(mTsmppt, "timeInBulk", "/History/Daily/0/TimeInBulk");
+    produce(mTsmppt, "timeInBulk", "/History/Daily/0/TimeInBulk");
     produce(mTsmppt, "timeInFloat", "/History/Daily/0/TimeInFloat");
-
-    //registerService();
 }
 
 DBusTsmpptBridge::~DBusTsmpptBridge()
