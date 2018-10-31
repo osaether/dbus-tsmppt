@@ -543,13 +543,15 @@ QString Tsmppt::productName() const
 
 void Tsmppt::onTimeout()
 {
+    mTimer->stop();
     if (!mInitialized)
     {
-        mTimer->stop();
         initialize();
-        mTimer->start();
-        return;
     }
-    updateValues();
+    else
+    {
+        updateValues();
+    }
+    mTimer->start();
 }
 
