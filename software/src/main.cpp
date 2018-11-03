@@ -15,7 +15,7 @@ void initLogger(QsLogging::Level logLevel)
     logger.addDestination(debugDestination);
     logger.setIncludeTimestamp(false);
 
-    QLOG_INFO() << "dbus-tsmppt" << "v"VERSION << "started";
+    QLOG_INFO() << "dbus-tsmppt" << "v" VERSION << "started";
     QLOG_INFO() << "Built with Qt" << QT_VERSION_STR << "running on" << qVersion();
     QLOG_INFO() << "Built with libmodbus" << LIBMODBUS_VERSION_STRING;
     QLOG_INFO() << "Built on" << __DATE__ << "at" << __TIME__;
