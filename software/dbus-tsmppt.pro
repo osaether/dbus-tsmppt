@@ -59,10 +59,6 @@ SOURCES += src/tsmppt.cpp \
            src/velib/src/qt/v_busitem_private_prod.cpp \
            src/velib/src/qt/v_busitem_proxy.cpp
 
-# suppress the mangling of va_arg has changed for gcc 4.4
-QMAKE_CXXFLAGS += -Wno-psabi
+QMAKE_CXXFLAGS += --std=c++11
 
-# these warnings appear when compiling with QT4.8.3-debug. Problem appears to be
-# solved in newer QT versions.
-QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 
