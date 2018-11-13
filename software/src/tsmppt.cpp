@@ -75,7 +75,7 @@ bool Tsmppt::readInputRegisters(int addr, int nb, uint16_t *dest)
         }
         if (tries > 1)
         {
-            QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno) << "Retrying (" << 5-tries-1 << ")...";
+            QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno) << "Retrying (" << 5-tries+1 << ")...";
         }
         tries--;
     }
