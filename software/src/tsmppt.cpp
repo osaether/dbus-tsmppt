@@ -75,10 +75,11 @@ bool Tsmppt::readInputRegisters(int addr, int nb, uint16_t *dest)
         }
         if (tries > 1)
         {
-            QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno) << "Retrying...";
+            QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno) << "Retrying (" << 5-tries-1 << ")...";
         }
         tries--;
     }
+    modbus_close(mCtx);
     QLOG_ERROR() << "MODBUS:" << modbus_strerror(errno) << "Trying to reconnect";
     emit connectionLost();
     return false;
