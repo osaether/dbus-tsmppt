@@ -1,7 +1,7 @@
 dbus-tsmppt
 ===========
 
-This application reads essential charging data from a Morningstar Tristar MPPT charge controller and publish it on the D-Bus. It is designed to run on the Victron Energy Venus OS but can easily be modified to run on other systems.
+This application reads essential charging data from a Morningstar Tristar MPPT charge controller and publish it on the D-Bus. It is designed to run on the [Victron Energy Venus OS](https://github.com/victronenergy/venus) but can easily be modified to run on other systems.
 
 Building
 ========
