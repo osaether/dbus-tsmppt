@@ -1,5 +1,5 @@
 # Application version and revision
-VERSION = 1.12
+VERSION = 1.13
 
 # Add more folders to ship with the application here
 unix {
@@ -10,6 +10,8 @@ unix {
     }
     INSTALLS += target
     target.path = $${DESTDIR}$${bindir}
+    diff.path = $${DESTDIR}$${bindir}
+    diff.files = qml/*.diff
 }
 
 LIBS += -lmodbus
@@ -58,6 +60,10 @@ SOURCES += src/tsmppt.cpp \
            src/velib/src/qt/v_busitem_private_cons.cpp \
            src/velib/src/qt/v_busitem_private_prod.cpp \
            src/velib/src/qt/v_busitem_proxy.cpp
+
+OTHER_FILES += \
+	PageSettings.diff \
+	PageSolarCharger.diff
 
 QMAKE_CXXFLAGS += --std=c++11
 
