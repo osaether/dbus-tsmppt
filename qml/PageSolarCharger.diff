@@ -1,0 +1,12 @@
+--- PageSolarCharger.qml	2018-12-25 14:29:44.886720697 +0100
++++ PageSolarCharger.qml.new	2018-12-25 14:28:24.143112697 +0100
+@@ -29,6 +29,9 @@
+ 			/* Fw versions < v1.09 are not supported */
+ 			return firmwareVersion.value >= 0x109
+ 		}
++		/* Morningstar TriStar MPPT */
++		if (productId.value === 0xABCD)
++			return true
+ 
+ 		/* Supported: e.g. VE.Can */
+ 		return true

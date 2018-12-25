@@ -1,0 +1,14 @@
+--- PageSettings.qml	2018-12-25 14:30:04.245036697 +0100
++++ PageSettings.qml.new	2018-12-25 14:28:37.368496697 +0100
+@@ -91,6 +91,11 @@
+ 			subpage: Component { PageSettingsFronius {} }
+ 		}
+ 
++                MbSubMenu {
++                        description: qsTr("TriStar MPPT 60 Solar Charger")
++                        subpage: Component { PageSettingsTsmppt {} }
++                }
++
+ 		MbSubMenu {
+ 			show: App.withQwacs
+ 			description: qsTr("Wireless AC sensors")
