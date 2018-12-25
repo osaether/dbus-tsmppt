@@ -8,8 +8,10 @@ unix {
     isEmpty(bindir) {
         bindir = /usr/local/bin
     }
-    INSTALLS += target
+    INSTALLS += target diff qml
     target.path = $${DESTDIR}$${bindir}
+    qml.path = $${DESTDIR}$${bindir}
+    qml.files = qml/*.qml
     diff.path = $${DESTDIR}$${bindir}
     diff.files = qml/*.diff
 }
@@ -61,9 +63,6 @@ SOURCES += src/tsmppt.cpp \
            src/velib/src/qt/v_busitem_private_prod.cpp \
            src/velib/src/qt/v_busitem_proxy.cpp
 
-OTHER_FILES += \
-	PageSettings.diff \
-	PageSolarCharger.diff
 
 QMAKE_CXXFLAGS += --std=c++11
 
