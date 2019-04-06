@@ -11,8 +11,8 @@ MbPage {
 		MbEditBox {
 			id: ipaddress
 			description: qsTr("Hostname/IP Address")
-			bind: Utils.path(settings, "/Settings/TristarMPPT/IPAddress")
-			text: hostItem.value
+			item.bind: Utils.path(settings, "/Settings/TristarMPPT/IPAddress")
+			item.value: hostItem.value
 
 			VBusItem {
 				id: hostItem
@@ -24,8 +24,8 @@ MbPage {
 			id: portnumber
 			description: qsTr("Modbus IP Port")
 			matchString: "0123456789"
-			text: portNumberItem.valid ? Utils.pad(portNumberItem.value, 5) : '--'
-			onTextChanged: portNumberItem.setValue(parseInt(text, 10));
+			item.value: portNumberItem.valid ? Utils.pad(portNumberItem.value, 5) : '--'
+			onEditDone: portNumberItem.setValue(parseInt(text, 10));
 
 			VBusItem {
 				id: portNumberItem
