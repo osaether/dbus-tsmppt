@@ -34,7 +34,7 @@ const int CS_BULK           = 5;
 
 
 Tsmppt::Tsmppt(const QString &IPAddress, const int port, int interval, int slave, QObject *parent):
-QObject(parent), mInitialized(false), mTimer(new QTimer(this)), m_interval(interval), m_t_bulk(0), m_t_bulk_ms(0), yield_user(0), yield_system(0)
+QObject(parent), mInitialized(false), mTimer(new QTimer(this)), m_interval(interval), m_cs(0), m_t_bulk(1), m_t_bulk_ms(0), yield_user(0), yield_system(0)
 {
     QLOG_DEBUG() << "Tsmppt::Tsmppt(" << IPAddress << ", " << port << ", " << interval << ", " << slave << ")";
     mCtx = modbus_new_tcp_pi(IPAddress.toStdString().c_str(), QString::number(port).toStdString().c_str());
