@@ -98,6 +98,7 @@ public:
 
 signals:
     void initialized();
+    void serviceRegistered();
 
 protected:
     /*!

@@ -34,7 +34,8 @@ const int CS_BULK           = 5;
 
 
 Tsmppt::Tsmppt(const QString &IPAddress, const int port, int interval, int slave, QObject *parent):
-QObject(parent), mInitialized(false), mTimer(new QTimer(this)), m_interval(interval), m_cs(0), m_t_bulk(1), m_t_bulk_ms(0), yield_user(0), yield_system(0)
+QObject(parent), mInitialized(false), mTimer(new QTimer(this)), m_interval(interval), m_cs(0), m_t_bulk(1),
+m_t_bulk_ms(0), yield_user(0), yield_system(0), m_model(1)
 {
     QLOG_DEBUG() << "Tsmppt::Tsmppt(" << IPAddress << ", " << port << ", " << interval << ", " << slave << ")";
     mCtx = modbus_new_tcp_pi(IPAddress.toStdString().c_str(), QString::number(port).toStdString().c_str());
@@ -54,7 +55,6 @@ QObject(parent), mInitialized(false), mTimer(new QTimer(this)), m_interval(inter
 #endif
     modbus_set_slave(mCtx, slave);
     mTimer->setInterval(m_interval);
-    mTimer->start();
     connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
 }
 
@@ -98,6 +98,7 @@ bool Tsmppt::initialize()
     }
 
     uint16_t regs[6];
+
     if (!readInputRegisters(REG_V_PU, 6, regs))
     {
         modbus_close(mCtx);
@@ -122,7 +123,7 @@ bool Tsmppt::initialize()
     ver += regs[4] & 0x0f;
     m_fw_ver = QString::number(ver);
 
-    // Read hardware version:
+    // Hardware version:
     if (!readInputRegisters(REG_EHW_VERSION, 1, regs))
     {
         modbus_close(mCtx);
@@ -130,7 +131,7 @@ bool Tsmppt::initialize()
     }
     m_hw_ver = QString::number(regs[0] >> 8) + "." + QString::number(regs[0] & 0xff);
 
-    // Read model
+    // Model
     if (!readInputRegisters(REG_EMODEL, 1, regs))
     {
         modbus_close(mCtx);
@@ -138,7 +139,7 @@ bool Tsmppt::initialize()
     }
     m_model = regs[0];
 
-    // Read serial number:
+    // Serial number:
     if (!readInputRegisters(REG_ESERIAL, 4, regs))
     {
         modbus_close(mCtx);
@@ -235,7 +236,7 @@ void Tsmppt::updateValues()
         // Charge state:
         setChargeState(reg[REG_CHARGE_STATE-REG_FIRST_DYN]);
 
-        if (m_cs == CS_BULK)        
+        if (m_cs == CS_BULK)
             m_t_bulk_ms += m_interval;
         else if (m_cs == CS_NIGHT)
             m_t_bulk_ms = 0;
@@ -556,3 +557,7 @@ void Tsmppt::onTimeout()
     mTimer->start();
 }
 
+void Tsmppt::startLogging()
+{
+    mTimer->start();
+}

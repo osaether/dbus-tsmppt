@@ -15,6 +15,7 @@ DBusTsmpptBridge::DBusTsmpptBridge(Tsmppt *tsmppt, QObject *parent):
 {
     Q_ASSERT(tsmppt != 0);
     connect(tsmppt, SIGNAL(tsmpptConnected()), this, SLOT(onTsmpptConnected()));
+    connect(this, SIGNAL(serviceRegistered()), tsmppt, SLOT(startLogging()));
 
     QString processName = QCoreApplication::arguments()[0];
     produce("/Mgmt/ProcessName", processName);
@@ -43,6 +44,7 @@ DBusTsmpptBridge::DBusTsmpptBridge(Tsmppt *tsmppt, QObject *parent):
     produce(mTsmppt, "timeInAbsorption", "/History/Daily/0/TimeInAbsorption");
     produce(mTsmppt, "timeInBulk", "/History/Daily/0/TimeInBulk");
     produce(mTsmppt, "timeInFloat", "/History/Daily/0/TimeInFloat");
+    registerService();
 }
 
 DBusTsmpptBridge::~DBusTsmpptBridge()
@@ -65,5 +67,4 @@ void DBusTsmpptBridge::onTsmpptConnected()
     produce("/Serial", QString::number(serial));
     QString logmsg = mTsmppt->productName() + " (serial #" + QString::number(serial) + ", controler v" + hwver + "." + fwver + ") connected";
     QLOG_INFO() << logmsg.toStdString().c_str();
-    registerService();
 }

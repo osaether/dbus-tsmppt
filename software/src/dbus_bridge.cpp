@@ -123,9 +123,14 @@ void DBusBridge::registerService()
     QLOG_INFO() << "Registering service" << mServiceName;
     QDBusConnection connection = VBusItems::getConnection(mServiceName);
     if (connection.registerService(mServiceName))
+    {
         mServiceRegistered = true;
+        emit serviceRegistered();
+    }
     else
+    {
         QLOG_FATAL() << "RegisterService failed";
+    }
 }
 
 bool DBusBridge::toDBus(const QString &, QVariant &)

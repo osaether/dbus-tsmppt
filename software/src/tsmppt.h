@@ -123,6 +123,7 @@ signals:
 
 private slots:
     void onTimeout();
+    void startLogging();
 
 private:
     bool readInputRegisters(int addr, int nb, uint16_t *dest);
