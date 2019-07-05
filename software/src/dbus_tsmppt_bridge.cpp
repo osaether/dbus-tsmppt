@@ -44,6 +44,11 @@ DBusTsmpptBridge::DBusTsmpptBridge(Tsmppt *tsmppt, QObject *parent):
     produce(mTsmppt, "timeInAbsorption", "/History/Daily/0/TimeInAbsorption");
     produce(mTsmppt, "timeInBulk", "/History/Daily/0/TimeInBulk");
     produce(mTsmppt, "timeInFloat", "/History/Daily/0/TimeInFloat");
+    produce(mTsmppt, "firmwareVersion", "/FirmwareVersion");
+    produce(mTsmppt, "hardwareVersion", "/HardwareVersion");
+    produce(mTsmppt, "productName", "/ProductName");
+    produce(mTsmppt, "serialNumber", "/Serial");
+
     registerService();
 }
 
@@ -58,13 +63,4 @@ void DBusTsmpptBridge::onTsmpptConnected()
 {
     produce("/Connected", 1);
     produce("/Mode", 1);
-    QString fwver = mTsmppt->firmwareVersion();
-    produce("/FirmwareVersion", fwver.toInt());
-    QString hwver = mTsmppt->hardwareVersion();
-    produce("/HardwareVersion", hwver);
-    produce("/ProductName", mTsmppt->productName());
-    uint64_t serial = mTsmppt->serialNumber();
-    produce("/Serial", QString::number(serial));
-    QString logmsg = mTsmppt->productName() + " (serial #" + QString::number(serial) + ", controler v" + hwver + "." + fwver + ") connected";
-    QLOG_INFO() << logmsg.toStdString().c_str();
 }

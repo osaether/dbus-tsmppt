@@ -35,7 +35,7 @@ const int CS_BULK           = 5;
 
 Tsmppt::Tsmppt(const QString &IPAddress, const int port, int interval, int slave, QObject *parent):
 QObject(parent), mInitialized(false), mTimer(new QTimer(this)), m_interval(interval), m_cs(0), m_t_bulk(1),
-m_t_bulk_ms(0), yield_user(0), yield_system(0), m_model(1)
+m_t_bulk_ms(0), yield_user(0), yield_system(0)
 {
     QLOG_DEBUG() << "Tsmppt::Tsmppt(" << IPAddress << ", " << port << ", " << interval << ", " << slave << ")";
     mCtx = modbus_new_tcp_pi(IPAddress.toStdString().c_str(), QString::number(port).toStdString().c_str());
@@ -121,7 +121,7 @@ bool Tsmppt::initialize()
     ver += ((regs[4] >> 8) & 0x0f) * 100;
     ver += ((regs[4] >> 4) & 0x0f) * 10;
     ver += regs[4] & 0x0f;
-    m_fw_ver = QString::number(ver);
+    setFirmwareVersion(ver);
 
     // Hardware version:
     if (!readInputRegisters(REG_EHW_VERSION, 1, regs))
@@ -129,7 +129,7 @@ bool Tsmppt::initialize()
         modbus_close(mCtx);
         return false;
     }
-    m_hw_ver = QString::number(regs[0] >> 8) + "." + QString::number(regs[0] & 0xff);
+    setHardwareVersion(QString::number(regs[0] >> 8) + "." + QString::number(regs[0] & 0xff));
 
     // Model
     if (!readInputRegisters(REG_EMODEL, 1, regs))
@@ -137,7 +137,25 @@ bool Tsmppt::initialize()
         modbus_close(mCtx);
         return false;
     }
-    m_model = regs[0];
+    QString name;
+    switch (regs[0])
+    {
+        case 0:
+            name = "TriStar MPPT 45";
+            break;
+
+        case 1:
+            name = "TriStar MPPT 60";
+            break;
+
+        case 2:
+            name = "TriStar MPPT 30";
+            break;
+
+        default:
+            name = "";
+    }
+    setProductName(name);
 
     // Serial number:
     if (!readInputRegisters(REG_ESERIAL, 4, regs))
@@ -145,19 +163,23 @@ bool Tsmppt::initialize()
         modbus_close(mCtx);
         return false;
     }
-    m_serial = (uint64_t)((regs[0] & 0xff) - 0x30) * 10000000;
-    m_serial += (uint64_t)((regs[0] >> 8) - 0x30) * 1000000;
-    m_serial += (uint64_t)((regs[1] & 0xff) - 0x30) * 100000;
-    m_serial += (uint64_t)((regs[1] >> 8) - 0x30) * 10000;
-    m_serial += (uint64_t)((regs[2] & 0xff) - 0x30) * 1000;
-    m_serial += (uint64_t)((regs[2] >> 8) - 0x30) * 100;
-    m_serial += (uint64_t)((regs[3] & 0xff) - 0x30) * 10;
-    m_serial += (uint64_t)((regs[3] >> 8) - 0x30);
+    uint64_t serial = (uint64_t)((regs[0] & 0xff) - 0x30) * 10000000;
+    serial += (uint64_t)((regs[0] >> 8) - 0x30) * 1000000;
+    serial += (uint64_t)((regs[1] & 0xff) - 0x30) * 100000;
+    serial += (uint64_t)((regs[1] >> 8) - 0x30) * 10000;
+    serial += (uint64_t)((regs[2] & 0xff) - 0x30) * 1000;
+    serial += (uint64_t)((regs[2] >> 8) - 0x30) * 100;
+    serial += (uint64_t)((regs[3] & 0xff) - 0x30) * 10;
+    serial += (uint64_t)((regs[3] >> 8) - 0x30);
+    setSerialNumber(QString::number(serial));
+
 
     modbus_close(mCtx);
     mInitialized = true;
     emit tsmpptConnected();
     QLOG_DEBUG() << "Tsmppt::initialize(end)";
+    QString logmsg = productName() + " (serial #" + serialNumber() + ", controler v" + hardwareVersion() + "." + firmwareVersion() + ") connected";
+    QLOG_INFO() << logmsg.toStdString().c_str();
     return true;
 }
 
@@ -247,9 +269,17 @@ void Tsmppt::updateValues()
     modbus_close(mCtx);
 }
 
-QString Tsmppt::firmwareVersion() const
+int Tsmppt::firmwareVersion() const
 {
     return m_fw_ver;
+}
+
+void Tsmppt::setFirmwareVersion(int v)
+{
+     if (m_fw_ver == v)
+        return;
+    m_fw_ver = v;
+    emit firmwareVersionChanged();
 }
 
 QString Tsmppt::hardwareVersion() const
@@ -257,9 +287,25 @@ QString Tsmppt::hardwareVersion() const
     return m_hw_ver;
 }
 
-uint64_t Tsmppt::serialNumber() const
+void Tsmppt::setHardwareVersion(QString v)
+{
+    if (m_hw_ver == v)
+        return;
+    m_hw_ver = v;
+    emit hardwareVersionChanged();
+}
+
+QString Tsmppt::serialNumber() const
 {
     return m_serial;
+}
+
+void Tsmppt::setSerialNumber(QString v)
+{
+    if (m_serial == v)
+        return;
+    m_serial = v;
+    emit serialNumberChanged();
 }
 
 double Tsmppt::batteryVoltage() const
@@ -525,22 +571,16 @@ void Tsmppt::setTimeInFloat(int v)
 
 QString Tsmppt::productName() const
 {
-    QString name;
-    switch (m_model)
-    {
-        case 0:
-            name = "TriStar MPPT 45";
-            break;
+    return m_name;
+}
 
-        case 1:
-            name = "TriStar MPPT 60";
-            break;
 
-        case 2:
-            name = "TriStar MPPT 30";
-            break;
-    }
-    return name;
+void Tsmppt::setProductName(QString v)
+{
+    if (m_name == v)
+        return;
+    m_name = v;
+    emit productNameChanged();
 }
 
 void Tsmppt::onTimeout()

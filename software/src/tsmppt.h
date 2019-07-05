@@ -29,6 +29,10 @@ class Tsmppt : public QObject
     Q_PROPERTY(int timeInBulk READ timeInBulk WRITE setTimeInBulk NOTIFY timeInBulkChanged)
     Q_PROPERTY(double yieldUser READ yieldUser WRITE setYieldUser NOTIFY yieldUserChanged)
     Q_PROPERTY(double yieldSystem READ yieldSystem WRITE setYieldSystem NOTIFY yieldSystemChanged)
+    Q_PROPERTY(int firmwareVersion READ firmwareVersion WRITE setFirmwareVersion NOTIFY firmwareVersionChanged)
+    Q_PROPERTY(QString hardwareVersion READ hardwareVersion WRITE setHardwareVersion NOTIFY hardwareVersionChanged)
+    Q_PROPERTY(QString productName READ productName WRITE setProductName NOTIFY productNameChanged)
+    Q_PROPERTY(QString serialNumber READ serialNumber WRITE setSerialNumber NOTIFY serialNumberChanged)
 
 public:
     Tsmppt(const QString &IPAddress, const int port = 502, int interval = 5000, int slave = 1, QObject *parent = 0);
@@ -91,10 +95,17 @@ public:
     double yieldSystem() const;
     void setYieldSystem(double v);
 
-    QString firmwareVersion() const;
+    int firmwareVersion() const;
+    void setFirmwareVersion(int v);
+
     QString hardwareVersion() const;
-    uint64_t serialNumber() const;
+    void setHardwareVersion(QString v);
+
+    QString serialNumber() const;
+    void setSerialNumber(QString v);
+
     QString productName() const;
+    void setProductName(QString v);
 
     bool initialize();
 
@@ -120,6 +131,10 @@ signals:
     void timeInBulkChanged();
     void yieldUserChanged();
     void yieldSystemChanged();
+    void firmwareVersionChanged();
+    void hardwareVersionChanged();
+    void serialNumberChanged();
+    void productNameChanged();
 
 private slots:
     void onTimeout();
@@ -159,10 +174,10 @@ private:
     // Static values (read once):
     double m_v_pu;          // Voltage scaling
     double m_i_pu;          // Current scaling
-    QString m_fw_ver;
+    int m_fw_ver;
     QString m_hw_ver;
-    uint64_t m_serial;
-    uint16_t m_model;
+    QString m_serial;
+    QString m_name;
 };
 
 #endif // TSMPPT_H
